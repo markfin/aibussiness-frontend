@@ -11,7 +11,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [data, setData] = useState<BIResponse | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
+  const API_URL = '/api' // Force proxy usage to avoid CORS; backend via server env API_URL
 
   const handleAnalyze = useCallback(async () => {
     if (!ticker.trim()) {

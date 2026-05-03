@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     const backendUrl = `${API_URL}/api/bi?ticker=${encodeURIComponent(ticker.toUpperCase())}`;
+    console.log(`[Proxy] Forwarding ${ticker} to backend: ${backendUrl}`);
     
-    const response = await fetch(backendUrl, {
+    const backendResponse = await fetch(backendUrl, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'BI-AI-Frontend/1.0',
@@ -28,23 +29,40 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!backendResponse.ok) {
+      const errorText = await backendResponse.text();
       return NextResponse.json(
-        { status: 'error', error: `Backend error: ${errorText || response.statusText}` },
-        { status: response.status }
+        { status: 'error', error: `Backend error: ${errorText || backendResponse.statusText}` },
+        { status: backendResponse.status }
       );
     }
 
-    const data = await response.json();
+    const data = await backendResponse.json();
 
     // Ensure response matches expected format
-    return NextResponse.json(data, {
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
+    const response = NextResponse.json(data, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=59', // 5min cache
+        ...corsHeaders,
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=59',
       },
     });
+
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, { 
+        status: 200, 
+        headers: corsHeaders 
+      });
+    }
+
+    return response;
   } catch (error: any) {
     console.error('Proxy error:', error);
     return NextResponse.json(
