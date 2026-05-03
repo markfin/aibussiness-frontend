@@ -11,7 +11,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [data, setData] = useState<BIResponse | null>(null)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
   const handleAnalyze = useCallback(async () => {
     if (!ticker.trim()) {
@@ -24,9 +24,7 @@ export default function Home() {
     setData(null)
 
     try {
-      const response = await axios.get(`${API_URL}/api/bi?ticker=${ticker.toUpperCase()}`, {
-        timeout: 30000, // 30s for FinBERT processing
-      })
+      const response = await axios.get(`${API_URL}/bi?ticker=${ticker.toUpperCase()}`)
 
       if (response.data.status === 'success') {
         setData(response.data)
@@ -34,7 +32,11 @@ export default function Home() {
         setError(response.data.error || 'Analysis failed')
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Request failed. Ensure backend is running on port 8000.')
+      setError(err.response?.data?.detail || err.message || 
+        (API_URL === '/api' 
+          ? 'Proxy failed. Ensure local backend on :8000 (dev) or set API_URL env var on Netlify to Supabase URL (prod).'
+          : 'Direct API request failed. Try proxy mode or check CORS/backend.')
+      )
     } finally {
       setLoading(false)
     }
