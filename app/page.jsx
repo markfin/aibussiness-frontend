@@ -15,9 +15,9 @@ import { fetchAnalyze } from '@/lib/api';
 export default function Page() {
   const [ticker, setTicker] = useState('AAPL');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState(null);
 
   const normalizedTicker = useMemo(() => ticker.trim().toUpperCase(), [ticker]);
 
@@ -29,7 +29,7 @@ export default function Page() {
     try {
       const res = await fetchAnalyze(t);
       setAnalysis(res);
-    } catch (e: any) {
+    } catch (e) {
       setError(e?.message ?? 'Unknown error');
       setAnalysis(null);
     } finally {

@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features if needed
-  experimental: {
-    typedRoutes: true,
-  },
+  reactStrictMode: true
 };
 
 export default nextConfig;
